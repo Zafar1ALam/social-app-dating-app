@@ -18,6 +18,8 @@ import axios from 'axios';
 import BaseUrl from '../../url/Urls';
 import { useIsFocused } from '@react-navigation/native';
 
+
+
 const SignUp = (props) => {
     const isFocused = useIsFocused();
     const ref_input0 = useRef();

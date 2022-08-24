@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
     Dimensions, Image,
     ImageBackground, SafeAreaView, ScrollView, Text,
@@ -23,9 +23,65 @@ import Carousel, { Pagination } from 'react-native-snap-carousel';
 import InAppPurchaseModel from '../../components/inapppurchasemodel/InAppPurchaseModel';
 import Dialog from "react-native-dialog";
 import LeftIconLeftText from '../../components/lefticonlefttext/LeftIconLeftText';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import BaseUrl from '../../url/Urls';
+import { useIsFocused } from '@react-navigation/native';
+import { axiosGet, axiosPatch } from '../../utills/axioshelper/axiosHelper';
+import SweetAlert from 'react-native-sweet-alert';
 
 const Settings = (props) => {
+
+
+
+    const clearCache = async () => {
+
+        try {
+            const keys = await AsyncStorage.getAllKeys();
+            console.log('keys')
+            console.log(keys)
+            keys.map(async (item) => {
+                if (item != "asyncUser") {
+                    await AsyncStorage.removeItem(item);
+                }
+            })
+            SweetAlert.showAlertWithOptions({
+                title: 'Clear Cache Successfully',
+                //  subTitle: '',
+                confirmButtonTitle: 'OK',
+
+                confirmButtonColor: '#000',
+
+                style: 'success',
+                //cancellable: true
+            },
+            )
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+
+    const logout = () => {
+        AsyncStorage.getAllKeys()
+            .then(keys => AsyncStorage.multiRemove(keys))
+            .then(() =>
+                SweetAlert.showAlertWithOptions({
+                    title: 'Logout Successfully',
+                    //  subTitle: '',
+                    confirmButtonTitle: 'OK',
+
+                    confirmButtonColor: '#000',
+
+                    style: 'success',
+                    //cancellable: true
+                },
+                ),
+                props.navigation.navigate("Login"));
+
+    }
+
+
     return (
         <SafeAreaView style={STYLES.withoutpaddingcontainer}>
 
@@ -87,7 +143,9 @@ const Settings = (props) => {
                 }}>
 
                     <LeftIconLeftText xml={Svgs.iconClearCache}
-
+                        onPress={() => {
+                            clearCache()
+                        }}
                         text="Clear cache" />
 
 
@@ -106,7 +164,8 @@ const Settings = (props) => {
             }}>
                 <Button1 text="Logout"
                     onPress={() => {
-                        props.navigation.navigate("Login")
+                        logout()
+
                     }} />
             </View>
 

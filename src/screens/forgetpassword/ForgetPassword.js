@@ -12,16 +12,18 @@ import COLORS from '../../utills/colors/Color';
 import Entypo from 'react-native-vector-icons/Entypo'
 import Svgs from '../../utills/svgs/Svgs';
 import Button1 from '../../components/button1/Button1';
-import { TouchableRipple } from 'react-native-paper';
+import { ActivityIndicator, TouchableRipple } from 'react-native-paper';
 import HeaderAddProfile from '../../components/headeraddprofile/HeaderAddProfile';
-
+import { axiosPost, axiosPostWithoutToken } from '../../utills/axioshelper/axiosHelper';
+import BaseUrl from '../../url/Urls';
+import SweetAlert from 'react-native-sweet-alert';
 
 
 const ForgetPassword = (props) => {
 
     const ref_input1 = useRef();
 
-
+    const [stateActivityIndicator, setStateActivityIndicator] = useState(false)
 
 
     const [stateIsValidEmail, setStateIsValidEmail] = useState(true);
@@ -52,7 +54,7 @@ const ForgetPassword = (props) => {
             return false;
         }
     }
-    const sendCode = () => {
+    const sendCode = async () => {
         if (!handleValidEmail(stateData.email)) {
             setStateIsValidEmail(false)
         }
@@ -68,7 +70,48 @@ const ForgetPassword = (props) => {
 
         if (stateData.email != ''
             && handleValidEmail(stateData.email)) {
-            props.navigation.navigate("VerificationCode")
+            setStateActivityIndicator(true)
+            const b = {
+                email: stateData.email
+
+            }
+            console.log(b)
+
+            try {
+                const emailSend = await axiosPostWithoutToken(BaseUrl + 'users/generate-otp',
+                    b
+                )
+
+                console.log(emailSend.data)
+
+
+                if (emailSend.data.success) {
+                    SweetAlert.showAlertWithOptions({
+                        title: 'Email sent  successfully to: ' + stateData.email,
+                        //  subTitle: '',
+                        confirmButtonTitle: 'OK',
+
+                        confirmButtonColor: '#000',
+
+                        style: 'success',
+                        //cancellable: true
+                    },
+                        // callback => console.log('callback')
+                    );
+                    setStateActivityIndicator(false)
+                    props.navigation.navigate("VerificationCode",
+                        {
+                            routeId: emailSend.data.id
+                        })
+                }
+                else {
+                    setStateActivityIndicator(false)
+                    alert(emailSend.data.message)
+                }
+            } catch (err) {
+                setStateActivityIndicator(false)
+                alert(err)
+            }
         }
     }
 
@@ -120,10 +163,15 @@ const ForgetPassword = (props) => {
                         marginTop: '110%',
                         marginBottom: '10%'
                     }}>
-                        <Button1 text="Continue"
-                            onPress={() => {
-                                sendCode()
-                            }} />
+                        {stateActivityIndicator ?
+                            <ActivityIndicator animating={stateActivityIndicator}
+                                color={COLORS.themecolorred} /> :
+
+                            <Button1 text="Continue"
+                                onPress={() => {
+                                    sendCode()
+                                }} />
+                        }
                     </View>
 
                 </View>

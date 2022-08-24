@@ -3,7 +3,7 @@ import {
     Dimensions, Image, SafeAreaView, View, TouchableOpacity,
     StyleSheet, Animated
 } from 'react-native';
-import { Text, TouchableRipple } from 'react-native-paper';
+import { ActivityIndicator, Text, TouchableRipple } from 'react-native-paper';
 import LeftTextRightDoubleIcon from '../../components/lefttextrightdoubleicon/LeftTextRightDoubleIcon';
 import STYLES from '../../STYLES/STYLES';
 import Carousel, { Pagination } from 'react-native-snap-carousel';
@@ -21,92 +21,106 @@ import LinearGradient from 'react-native-linear-gradient';
 import FastImage from 'react-native-fast-image'
 import SwipeCards from "react-native-swipe-cards-deck";
 import COLORS from '../../utills/colors/Color';
-
+import { axiosGet } from '../../utills/axioshelper/axiosHelper';
+import BaseUrl, { ImageUrl } from '../../url/Urls';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const FindMatch = (props) => {
 
     const refCardsSwipe = useRef()
-
+    const [stateActivityIndicatorBody, setStateActivityIndicatorBody] = useState(false)
 
     const refRBSheetViewProfilesOfMatches = useRef();
     const refRBSheetPostDetail = useRef();
 
 
+    const [statePage, setStatePage] = useState(4);
+
+    const [stateLimit, setStateLimit] = useState(10);
 
 
     const [stateShowStar, setStateShowStar] = useState(false);
 
 
-    const [cardsData, setCardsDarta] = useState([
-        {
-            id: 1,
-            image: require('../../assets/imagefindmatchslider.png'),
+    useEffect(() => {
 
-            title: "Lorem ipsum dolor sit",
-            subtitle: "Lorem ipsum dolor sit amet"
-        },
-        {
-            id: 2,
-            image: require('../../assets/imagefindmatchslider.png'),
-            title: "Lorem ipsum dolor sit",
-            subtitle: "Lorem ipsum dolor sit amet"
-        },
-        {
-            id: 3,
-            image: require('../../assets/humanbeing12.png'),
-            title: "Lorem ipsum dolor sit",
-            subtitle: "Lorem ipsum dolor sit amet"
-        },
-        {
-            id: 4,
-            image: require('../../assets/imagefindmatchslider.png'),
-            title: "Lorem ipsum dolor sit",
-            subtitle: "Lorem ipsum dolor sit amet"
-        },
-        {
-            id: 5,
-            image: require('../../assets/imagefindmatchslider.png'),
-            title: "Lorem ipsum dolor sit",
-            subtitle: "Lorem ipsum dolor sit amet"
-        },
-    ]);
+        setStateActivityIndicatorBody(true)
+        const callApi = async () => {
+
+            const b = {
+                page: statePage,
+                limit: stateLimit,
+                long: 73.069704,
+                lat: 33.655127//73.069704, 33.655127
+
+            }
+            console.log(b)
+            try {
+
+                const response = await axiosGet(BaseUrl + 'users/getAll',
+                    b
+                )
+                //    setStateActivityIndicator(false)
+                console.log(response.data)
+
+                if (response.data.success) {
+                    console.log('sdfggfd')
+                    setStateActivityIndicatorBody(false)
+                    setCards(response.data.users)
+                }
+                else {
+                    setStateActivityIndicatorBody(false)
+                    alert(response.data.message)
+                }
+            }
+            catch (e) {
+                setStateActivityIndicatorBody(false)
+                alert(e)
+            }
+        }
+
+        callApi()
+
+    }, [])
+
 
     const [cards, setCards] = useState([
-        {
-            id: 1,
-            image: require('../../assets/imagefindmatchslider.png'),
+        // {
+        //     id: 1,
+        //     image: require('../../assets/imagefindmatchslider.png'),
 
-            title: "Lorem ipsum dolor sit",
-            subtitle: "Lorem ipsum dolor sit amet"
-        },
-        {
-            id: 2,
-            image: require('../../assets/imagefindmatchslider.png'),
-            title: "Lorem ipsum dolor sit",
-            subtitle: "Lorem ipsum dolor sit amet"
-        },
-        {
-            id: 3,
-            image: require('../../assets/imagefindmatchslider.png'),
-            title: "Lorem ipsum dolor sit",
-            subtitle: "Lorem ipsum dolor sit amet"
-        },
-        {
-            id: 4,
-            image: require('../../assets/imagefindmatchslider.png'),
-            title: "Lorem ipsum dolor sit",
-            subtitle: "Lorem ipsum dolor sit amet"
-        },
-        {
-            id: 5,
-            image: require('../../assets/imagefindmatchslider.png'),
-            title: "Lorem ipsum dolor sit",
-            subtitle: "Lorem ipsum dolor sit amet"
-        },
+        //     title: "Lorem ipsum dolor sit",
+        //     subtitle: "Lorem ipsum dolor sit amet"
+        // },
+        // {
+        //     id: 2,
+        //     image: require('../../assets/imagefindmatchslider.png'),
+        //     title: "Lorem ipsum dolor sit",
+        //     subtitle: "Lorem ipsum dolor sit amet"
+        // },
+        // {
+        //     id: 3,
+        //     image: require('../../assets/imagefindmatchslider.png'),
+        //     title: "Lorem ipsum dolor sit",
+        //     subtitle: "Lorem ipsum dolor sit amet"
+        // },
+        // {
+        //     id: 4,
+        //     image: require('../../assets/imagefindmatchslider.png'),
+        //     title: "Lorem ipsum dolor sit",
+        //     subtitle: "Lorem ipsum dolor sit amet"
+        // },
+        // {
+        //     id: 5,
+        //     image: require('../../assets/imagefindmatchslider.png'),
+        //     title: "Lorem ipsum dolor sit",
+        //     subtitle: "Lorem ipsum dolor sit amet"
+        // },
     ]);
 
     function Card({ data }) {
+        console.log(data)
         return (
             <TouchableRipple style={{
 
@@ -135,7 +149,7 @@ const FindMatch = (props) => {
                     }}>
                         <>
 
-                            <Image source={data.image}
+                            <Image source={{ uri: ImageUrl + data?.pfp }}
                                 style={{
                                     // height: '100%',
                                     // flex: 1,
@@ -170,7 +184,7 @@ const FindMatch = (props) => {
 
                                 }}>
                                     <Text style={[STYLES.fontSize35_whiteFFFFFF_Nunito_ExtraBold_800,
-                                    { textAlign: 'center' }]}>Emma, 22</Text>
+                                    { textAlign: 'center' }]}>{data.username}, {data.age}</Text>
 
                                 </View>
 
@@ -179,7 +193,7 @@ const FindMatch = (props) => {
                                 }}>
                                     <Text style={[STYLES.fontSize17_whiteFFFFFF_Nunito_SemiBold_600,
                                     { textAlign: 'center', width: '100%' }]}
-                                        numberOfLines={3}>72 km, Lawyer</Text>
+                                        numberOfLines={3}>{data?.distance} km, {data.profession.name}</Text>
 
                                 </View>
 
@@ -288,188 +302,198 @@ const FindMatch = (props) => {
                 </View>
 
 
-                <TouchableRipple style={{
-                    flex: 0.85,
-                    //  backgroundColor: 'green',
-                    marginTop: '7%',
-                    marginHorizontal: '7%',
-                }}
-                    onPress={() => {
-                        console.log('a')
-                        refRBSheetPostDetail.current.open()
-                        //props.navigation.navigate("ItsaMatch")
 
-                    }}
-                >
-
-
-
-
-                    <SwipeCards
-                        onClickHandler={() => {
-                            console.log('kjhgfcxghj')
-                            //  
+                {stateActivityIndicatorBody
+                    ?
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                        <ActivityIndicator
+                            animating={stateActivityIndicatorBody} color={COLORS.whiteFFFFFF} />
+                    </View>
+                    :
+                    <>
+                        <TouchableRipple style={{
+                            flex: 0.85,
+                            //  backgroundColor: 'green',
+                            marginTop: '7%',
+                            marginHorizontal: '7%',
                         }}
-                        swipeThreshold={220}
-                        stackOffsetX={0}
-                        stackOffsetY={15}
-                        stack={true}
-                        loop={true}
-                        ref={refCardsSwipe}
-                        renderYup={handleYup}
-                        cards={cards}
-                        containerStyle={{
+                            onPress={() => {
+                                console.log('a')
+                                refRBSheetPostDetail.current.open()
+                                //props.navigation.navigate("ItsaMatch")
 
-                            backgroundColor: 'red',
-                            // borderRadius: 40
-                        }}
-                        renderCard={(cardData) => <Card data={cardData} />}
-                        keyExtractor={(cardData) => String(cardData.id)}
-                        renderNoMoreCards={() => <StatusCard text="No more cards..." />}
-                        actions={{
-                            nope: {
-                                onAction: handleNope,
-                                containerStyle: {
-                                    marginBottom: '50%',
-                                    marginRight: "50%",
-                                    borderWidth: 0
-                                },
-
-                                view:
-                                    <View style={{
-
-                                    }}>
-                                        <SvgXml xml={Svgs.svgCardSwipeLeft} />
-                                    </View>
-
-                            },
-                            yup: {
-                                containerStyle: {
-                                    marginBottom: '40%',
-                                    marginLeft: "25%",
-                                    borderWidth: 0
-                                },
-
-                                view:
-                                    <View style={{
+                            }}
+                        >
 
 
 
-                                    }}>
-                                        <SvgXml xml={Svgs.svgCardSwipeRight} />
-                                    </View>
+
+                            <SwipeCards
+                                onClickHandler={() => {
+                                    console.log('kjhgfcxghj')
+                                    //  
+                                }}
+                                swipeThreshold={220}
+                                stackOffsetX={0}
+                                stackOffsetY={15}
+                                stack={true}
+                                // loop={true}
+                                ref={refCardsSwipe}
+                                renderYup={handleYup}
+                                cards={cards}
+                                containerStyle={{
+
+                                    backgroundColor: 'red',
+                                    // borderRadius: 40
+                                }}
+                                renderCard={(cardData) => <Card data={cardData} />}
+                                keyExtractor={(cardData) => String(cardData._id)}
+                                renderNoMoreCards={() => <StatusCard text="No more cards..." />}
+                                actions={{
+                                    nope: {
+                                        onAction: handleNope,
+                                        containerStyle: {
+                                            marginBottom: '50%',
+                                            marginRight: "50%",
+                                            borderWidth: 0
+                                        },
+
+                                        view:
+                                            <View style={{
+
+                                            }}>
+                                                <SvgXml xml={Svgs.svgCardSwipeLeft} />
+                                            </View>
+
+                                    },
+                                    yup: {
+                                        containerStyle: {
+                                            marginBottom: '40%',
+                                            marginLeft: "25%",
+                                            borderWidth: 0
+                                        },
+
+                                        view:
+                                            <View style={{
 
 
 
-                            },
-                            maybe: {
-                                onAction: handleMaybe,
-                                containerStyle: {
-                                    marginBottom: '40%',
-
-                                    borderWidth: 0
-                                },
-
-                                view:
-                                    <View style={{
-
-                                    }}>
-                                        <SvgXml xml={Svgs.svgStar} />
-                                    </View>
-                            },
-                        }}
-                        hasMaybeAction={true}
-
-                    // If you want a stack of cards instead of one-per-one view, activate stack mode
-                    // stack={true}
-                    // stackDepth={3}
+                                            }}>
+                                                <SvgXml xml={Svgs.svgCardSwipeRight} />
+                                            </View>
 
 
 
-                    />
+                                    },
+                                    maybe: {
+                                        onAction: handleMaybe,
+                                        containerStyle: {
+                                            marginBottom: '40%',
+
+                                            borderWidth: 0
+                                        },
+
+                                        view:
+                                            <View style={{
+
+                                            }}>
+                                                <SvgXml xml={Svgs.svgStar} />
+                                            </View>
+                                    },
+                                }}
+                                hasMaybeAction={true}
+
+                            // If you want a stack of cards instead of one-per-one view, activate stack mode
+                            // stack={true}
+                            // stackDepth={3}
 
 
-                </TouchableRipple>
+
+                            />
 
 
-                <View style={{
-                    flexDirection: 'row',
-                    marginTop: '15%',
+                        </TouchableRipple>
 
-                    marginHorizontal: '7%',
-                    flex: 0.15,
-                    //backgroundColor: 'red',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
 
-                }}>
-                    <TouchableRipple onPress={() => {
+                        <View style={{
+                            flexDirection: 'row',
+                            marginTop: '15%',
 
-                    }} style={{
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor: COLORS.whiteFFFFFF,
-                        borderRadius: 50,
-                        height: 55, width: 55
-                    }}>
-                        <SvgXml xml={Svgs.svgReloadFindMatch} />
-                    </TouchableRipple >
-                    <TouchableRipple onPress={() => {
-                        refCardsSwipe.current.swipeNope()
-                    }}
-                        style={{
-                            justifyContent: 'center',
-                            alignSelf: 'center',
+                            marginHorizontal: '7%',
+                            flex: 0.15,
+                            //backgroundColor: 'red',
                             alignItems: 'center',
-                            backgroundColor: COLORS.themecolorred,
-                            borderRadius: 50,
-                            height: 55, width: 55,
-                            elevation: 2
+                            justifyContent: 'space-between',
 
                         }}>
-                        <SvgXml xml={Svgs.svgCrossFindMatch} />
-                    </TouchableRipple>
-                    <TouchableRipple onPress={() => {
-                        refCardsSwipe.current.swipeYup()
-                    }}
-                        style={{
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: COLORS.pinkFE3C72,
-                            borderRadius: 50,
-                            height: 55, width: 55,
+                            <TouchableRipple onPress={() => {
 
-                            elevation: 2,
-                        }}>
+                            }} style={{
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                backgroundColor: COLORS.whiteFFFFFF,
+                                borderRadius: 50,
+                                height: 55, width: 55
+                            }}>
+                                <SvgXml xml={Svgs.svgReloadFindMatch} />
+                            </TouchableRipple >
+                            <TouchableRipple onPress={() => {
+                                refCardsSwipe.current.swipeNope()
+                            }}
+                                style={{
+                                    justifyContent: 'center',
+                                    alignSelf: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: COLORS.themecolorred,
+                                    borderRadius: 50,
+                                    height: 55, width: 55,
+                                    elevation: 2
 
-                        <SvgXml xml={Svgs.svgHeartFindMatch} />
+                                }}>
+                                <SvgXml xml={Svgs.svgCrossFindMatch} />
+                            </TouchableRipple>
+                            <TouchableRipple onPress={() => {
+                                refCardsSwipe.current.swipeYup()
+                            }}
+                                style={{
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: COLORS.pinkFE3C72,
+                                    borderRadius: 50,
+                                    height: 55, width: 55,
+
+                                    elevation: 2,
+                                }}>
+
+                                <SvgXml xml={Svgs.svgHeartFindMatch} />
 
 
-                    </TouchableRipple>
+                            </TouchableRipple>
 
-                    <TouchableRipple onPress={() => {
-                        refCardsSwipe.current.swipeMaybe()
-                        // setStateShowStar(true)
-                        // setTimeout(() => {
-                        //     console.log('star')
-                        //     setStateShowStar(false)
+                            <TouchableRipple onPress={() => {
+                                refCardsSwipe.current.swipeMaybe()
+                                // setStateShowStar(true)
+                                // setTimeout(() => {
+                                //     console.log('star')
+                                //     setStateShowStar(false)
 
-                        // }, 3000)
-                    }}
-                        style={{
-                            elevation: 2,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: COLORS.themecolorred,
-                            borderRadius: 50,
-                            height: 55, width: 55
-                        }}>
+                                // }, 3000)
+                            }}
+                                style={{
+                                    elevation: 2,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: COLORS.themecolorred,
+                                    borderRadius: 50,
+                                    height: 55, width: 55
+                                }}>
 
-                        <Entypo name="star" size={24} color={COLORS.whiteFFFFFF} />
+                                <Entypo name="star" size={24} color={COLORS.whiteFFFFFF} />
 
-                    </TouchableRipple>
-                </View>
-
+                            </TouchableRipple>
+                        </View>
+                    </>
+                }
             </LinearGradient>
             <RBSheet
                 closeOnPressMask={false}

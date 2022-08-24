@@ -11,13 +11,17 @@ import LeftTextRightSvg from '../../components/lefttextrightsvg/LeftTextRightSvg
 import STYLES from '../../STYLES/STYLES';
 import Svgs from '../../utills/svgs/Svgs';
 import ImagePicker from 'react-native-image-crop-picker';
-import { TouchableRipple } from 'react-native-paper';
+import { ActivityIndicator, TouchableRipple } from 'react-native-paper';
 import COLORS from '../../utills/colors/Color';
 import Button1 from '../../components/button1/Button1';
 import ImageModal from '../../components/imagemodal/ImageModal';
 import { Item } from 'react-native-paper/lib/typescript/components/List/List';
-
-
+import RNFetchBlob from 'rn-fetch-blob';
+import BaseUrl from '../../url/Urls';
+import { useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { axiosPut } from '../../utills/axioshelper/axiosHelper';
+import SweetAlert from 'react-native-sweet-alert';
 
 
 const AddPhoto = (props) => {
@@ -27,6 +31,12 @@ const AddPhoto = (props) => {
     var item1 = 1
     const [stateIsValidImage, setStateIsValidImage] = useState(true);
     const [stateFlatlistRefresh, setStateFlatlistRefresh] = useState(false);
+    const [stateActivityIndicator, setStateActivityIndicator] = useState(false)
+    const [stateActivityIndicatorBody, setStateActivityIndicatorBody] = useState(false)
+
+    const [stateAsyncUserData, setStateAsyncUserData] = useState();
+    const [stateImage, setStateImage] = useState([])
+
     const [stateImageArray, setStateImageArray] = useState([
 
 
@@ -36,6 +46,21 @@ const AddPhoto = (props) => {
         },
     ])
 
+    const getAsyncValue = async () => {
+
+        setStateActivityIndicatorBody(true)
+        const value = await AsyncStorage.getItem('asyncUser');
+        if (value != null) {
+            const a = JSON.parse(value)
+            console.log(a)
+            setStateAsyncUserData(a)
+            setStateActivityIndicatorBody(false)
+        }
+    }
+
+    useEffect(() => {
+        getAsyncValue()
+    }, [])
     const imageTakeFromCamera = () => {
 
         ImagePicker.openCamera({
@@ -56,6 +81,7 @@ const AddPhoto = (props) => {
             if (arr.length < 9) {
 
                 arr.pop()
+
                 arr.push({
                     item: a + 1,
                     falg: true,
@@ -93,7 +119,7 @@ const AddPhoto = (props) => {
 
 
         ImagePicker.openPicker({
-            mediaType: 'any'
+
         }).then(image => {
 
 
@@ -112,6 +138,8 @@ const AddPhoto = (props) => {
                 if (arr.length < 9) {
 
                     arr.pop()
+
+
                     arr.push({
                         item: a + 1,
                         falg: true,
@@ -180,14 +208,91 @@ const AddPhoto = (props) => {
         refRBSheetCamera.current.close()
 
     }
-    const continue1 = () => {
+    const continue1 = async () => {
         console.log(stateImageArray.length)
         if (stateImageArray.length == 1) {
             setStateIsValidImage(false)
         }
+        console.log(stateImageArray.length + 'length')
 
         if (stateImageArray.length > 1) {
-            props.navigation.goBack()
+
+            console.log('sdfggfdsw')
+
+            setStateActivityIndicator(true)
+            stateImageArray.map(image => {
+
+                if (image.imagePath != undefined && image.falg == true) {
+                    const filnename = image.imagePath.substring(image.imagePath.lastIndexOf('/') + 1)
+
+                    stateImage.push({
+                        name: 'post-media',
+                        filename: filnename,
+                        path: image?.imagePath,
+                        type: "image/png",
+                        data: RNFetchBlob.wrap(image.imagePath)
+                    })
+                }
+            })
+            console.log(stateImage)
+            // console.log(stateImage)
+
+            RNFetchBlob.fetch('PUT',
+                BaseUrl +
+                'posts/upload-media',
+
+                {
+                    "Authorization": `Bearer ${stateAsyncUserData.token}`,
+
+                    'Content-Type': 'multipart/form-data',
+                },
+
+
+                stateImage).then(async (resp) => {
+                    // ...
+
+                    let obj = JSON.parse(resp.data)
+                    console.log('Image', obj)
+
+                    let body = {
+                        userId: stateAsyncUserData.id,
+                        media: obj.mediaURLs
+                    }
+
+                    await axiosPut(BaseUrl + "posts/add", body)
+                        .then((response) => {
+                            console.log(response.data)
+                            if (response.data.success == true) {
+                                SweetAlert.showAlertWithOptions({
+                                    title: 'Post Successfully Added ',
+                                    //  subTitle: '',
+                                    confirmButtonTitle: 'OK',
+
+                                    confirmButtonColor: '#000',
+
+                                    style: 'success',
+                                    //cancellable: true
+                                })
+                                setStateActivityIndicator(false)
+                                props.navigation.goBack()
+                            }
+                            else {
+                                alert(response.data.message)
+                            }
+                        })
+                        .catch((err) => {
+                            alert(err)
+                            setStateActivityIndicator(false)
+
+                        })
+                }).catch((err) => {
+                    setStateActivityIndicator(false)
+                    alert(err)
+                })
+
+
+
+            //   
         }
 
     }
@@ -196,7 +301,7 @@ const AddPhoto = (props) => {
         <SafeAreaView style={STYLES.container}>
             <ScrollView showsVerticalScrollIndicator={false} >
                 <View >
-                    <LeftTextRightSvg text="Add Photo Or Vedio"
+                    <LeftTextRightSvg text="Add Photo "
                         rippleColor={COLORS.themecolorred}
                         onPress={() => {
                             props.navigation.goBack()
@@ -224,139 +329,158 @@ const AddPhoto = (props) => {
                 </View>
 
 
-                <View>
-                    <FlatList style={{
-                        marginTop: '7%',
-                        width: '100%',
-                        alignSelf: 'center',
-                        //  backgroundColor: 'red'
-                    }}
-                        extraData={stateFlatlistRefresh}
-                        numColumns={3}
-                        showsVerticalScrollIndicator={false}
+                {stateActivityIndicatorBody
+                    ?
+                    <View style={{
+                        flex: 1,
+                        marginVertical: '50%'
+                    }}>
+                        <ActivityIndicator
+                            animating={stateActivityIndicatorBody} color={COLORS.themecolorred} />
+                    </View>
 
-                        data={stateImageArray}
+                    :
+                    <>
+                        <View>
+                            <FlatList style={{
+                                marginTop: '7%',
+                                width: '100%',
+                                alignSelf: 'center',
+                                //  backgroundColor: 'red'
+                            }}
+                                extraData={stateFlatlistRefresh}
+                                numColumns={3}
+                                showsVerticalScrollIndicator={false}
 
-                        renderItem={({ item }) => {
+                                data={stateImageArray}
 
-                            console.log('false')
-                            return (
-                                <>
-                                    {item.falg == true ?
-                                        <View style={{
-                                            height: 110,
-                                            width: '30%',
-                                            marginRight: '1.5%',
-                                            marginLeft: '1.5%',
-                                            marginBottom: '5%',
-                                            justifyContent: 'space-between',
-                                            //s  backgroundColor: 'green'
-                                        }}>
-                                            <TouchableRipple style={{
-                                                width: '100%',
-                                                // alignSelf: 'center',
-                                                height: 96,
-                                                //backgroundColor: 'red',
-                                                marginHorizontal: '3%'
-                                            }} onPress={() => {
+                                renderItem={({ item }) => {
 
-                                                if (item.vedioPath != undefined) {
-                                                    props.navigation.navigate("VedioPlayer",
-                                                        { a: item.vedioPath })
+                                    console.log('false')
+                                    return (
+                                        <>
+                                            {item.falg == true ?
+                                                <View style={{
+                                                    height: 110,
+                                                    width: '30%',
+                                                    marginRight: '1.5%',
+                                                    marginLeft: '1.5%',
+                                                    marginBottom: '5%',
+                                                    justifyContent: 'space-between',
+                                                    //s  backgroundColor: 'green'
+                                                }}>
+                                                    <TouchableRipple style={{
+                                                        width: '100%',
+                                                        // alignSelf: 'center',
+                                                        height: 96,
+                                                        //backgroundColor: 'red',
+                                                        marginHorizontal: '3%'
+                                                    }} onPress={() => {
 
-                                                }
-                                            }}>
+                                                        if (item.vedioPath != undefined) {
+                                                            props.navigation.navigate("VedioPlayer",
+                                                                { a: item.vedioPath })
 
-                                                <>
-                                                    <Image
-                                                        source={{
-                                                            uri:
-                                                                item.vedioPath == undefined ?
-                                                                    item.imagePath
-                                                                    : item.vedioPath
+                                                        }
+                                                    }}>
 
-
-                                                        }}
-                                                        style={{
-                                                            height: '100%',
-                                                            width: '100%',
-                                                            borderRadius: 12
-
-                                                        }} />
-
-
-                                                    {item.vedioPath == undefined ?
-                                                        <></> :
-
-                                                        <View style={{
-                                                            position: 'absolute',
-                                                            top: '25%',
-                                                            left: '25%'
-                                                        }}>
-                                                            <SvgXml xml={Svgs.svgVedioPauseButton} />
-                                                        </View>
-                                                    }
+                                                        <>
+                                                            <Image
+                                                                source={{
+                                                                    uri:
+                                                                        item.vedioPath == undefined ?
+                                                                            item.imagePath
+                                                                            : item.vedioPath
 
 
-                                                </>
-                                            </TouchableRipple>
+                                                                }}
+                                                                style={{
+                                                                    height: '100%',
+                                                                    width: '100%',
+                                                                    borderRadius: 12
+
+                                                                }} />
+
+
+                                                            {item.vedioPath == undefined ?
+                                                                <></> :
+
+                                                                <View style={{
+                                                                    position: 'absolute',
+                                                                    top: '25%',
+                                                                    left: '25%'
+                                                                }}>
+                                                                    <SvgXml xml={Svgs.svgVedioPauseButton} />
+                                                                </View>
+                                                            }
+
+
+                                                        </>
+                                                    </TouchableRipple>
 
 
 
-                                        </View>
+                                                </View>
 
 
-                                        :
+                                                :
 
 
-                                        <TouchableRipple style={{
-                                            width: '30%',
-                                            height: 100,
-                                            marginRight: '1.5%',
-                                            marginLeft: '1.5%',
-                                            borderWidth: 1,
-                                            borderRadius: 12,
-                                            borderStyle: 'dashed',
-                                            borderColor: COLORS.pinKE75073,
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }} onPress={() => {
-                                            refRBSheetCamera.current.open()
-                                        }}>
-                                            <SvgXml xml={Svgs.svgPlusAddPhoto} />
-                                        </TouchableRipple>
-                                    }
+                                                <TouchableRipple style={{
+                                                    width: '30%',
+                                                    height: 100,
+                                                    marginRight: '1.5%',
+                                                    marginLeft: '1.5%',
+                                                    borderWidth: 1,
+                                                    borderRadius: 12,
+                                                    borderStyle: 'dashed',
+                                                    borderColor: COLORS.pinKE75073,
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }} onPress={() => {
+                                                    refRBSheetCamera.current.open()
+                                                }}>
+                                                    <SvgXml xml={Svgs.svgPlusAddPhoto} />
+                                                </TouchableRipple>
+                                            }
 
-                                </>
-                            )
+                                        </>
+                                    )
 
-                        }}
-                        keyExtractor={item => item.item}
-
-
-                    />
-
-                </View>
-                {stateIsValidImage == false ? <Text style={{ color: 'red' }}>Enter Valid Photo</Text> : null}
+                                }}
+                                keyExtractor={item => item.item}
 
 
-                {console.log('stateImageArray' + stateImageArray.length)}
-                <View style={{
-                    marginTop: stateImageArray.length > 6
-                        ? "10%" : stateImageArray.length > 3 ?
-                            "50%" : '80%'
-                }}>
-                    <Button1 text="CONTINUE"
-                        onPress={() => {
-                            continue1()
-                        }} />
-                </View>
+                            />
 
+                        </View>
+                        {stateIsValidImage == false ? <Text style={{ color: 'red' }}>Enter Valid Photo</Text> : null}
+
+
+
+                        <View style={{
+                            marginTop: stateImageArray.length > 6
+                                ? "10%" : stateImageArray.length > 3 ?
+                                    "50%" : '80%'
+                        }}>
+
+                            {stateActivityIndicator ?
+                                <ActivityIndicator animating={stateActivityIndicator}
+                                    color={COLORS.themecolorred} /> :
+
+                                <Button1 text="CONTINUE"
+                                    onPress={() => {
+                                        continue1()
+                                    }} />
+                            }
+                        </View>
+                    </>
+                }
             </ScrollView>
 
 
             <ImageModal
-                headingText={"Add Photo Or Vedio"}
+                headingText={"Add Photo"}
                 refs={refRBSheetCamera}
                 imageTakeFromCamera={() => {
                     imageTakeFromCamera()

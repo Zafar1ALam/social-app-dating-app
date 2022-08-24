@@ -20,8 +20,10 @@ import BaseUrl from '../../url/Urls';
 
 
 
-const UpdatePassword = (props) => {
+const UserChangePassword = (props) => {
     const a = props.route.params;
+
+    const ref_input1 = useRef();
     const ref_input2 = useRef();
 
     const [stateActivityIndicator, setStateActivityIndicator] = useState(false)
@@ -32,18 +34,20 @@ const UpdatePassword = (props) => {
 
     }, [])
 
-    const [statePasswordShow, setStatePasswordShow] = useState(true)
+    const [stateOldPasswordShow, setStateOldPasswordShow] = useState(true)
+    const [stateNewPasswordShow, setStateNewPasswordShow] = useState(true)
     const [stateConfirmPasswordShow, setStateConfirmPasswordShow] = useState(true)
 
 
     const [stateIsValidPasswordConfirmPassword, setStateIsValidPasswordConfirmPassword] = useState(true);
 
-    const [stateIsValidPassword, setStateIsValidPassword] = useState(true);
+    const [stateIsValidOldPassword, setStateIsValidOldPassword] = useState(true);
+    const [stateIsValidNewPassword, setStateIsValidNewPassword] = useState(true);
     const [stateIsValidConfirmPassword, setStateIsValidConfirmPassword] = useState(true);
     const [stateData, setStateData] = useState({
 
-
-        password: "",
+        oldPassword: "",
+        newPassword: "",
         confirmPassword: ""
 
     }
@@ -52,7 +56,7 @@ const UpdatePassword = (props) => {
 
 
     const passwordCheck = () => {
-        if (stateData.password === stateData.confirmPassword) {
+        if (stateData.newPassword === stateData.confirmPassword) {
             console.log('true')
             return true;
         }
@@ -64,11 +68,20 @@ const UpdatePassword = (props) => {
 
 
     const update = async () => {
-
-
-        if (stateData.password == '') {
+        console.log(stateData.oldPassword,
+            stateData.newPassword,
+            stateData.confirmPassword)
+        if (stateData.oldPassword == '') {
             //   console.log(stateData.email + 'emailaddress')
-            setStateIsValidPassword(false)
+            setStateIsValidOldPassword(false)
+
+
+
+        }
+
+        if (stateData.newPassword == '') {
+            //   console.log(stateData.email + 'emailaddress')
+            setStateIsValidNewPassword(false)
 
 
 
@@ -82,20 +95,26 @@ const UpdatePassword = (props) => {
 
         }
 
-        if (stateData.confirmPassword != ''
-            && stateData.password) {
+        if (stateData.oldPassword != '' &&
+            stateData.confirmPassword != ''
+            && stateData.newPassword) {
             if (!passwordCheck()) {
                 setStateIsValidPasswordConfirmPassword(false)
             }
             else {
                 setStateActivityIndicator(true)
                 const b = {
-                    password: stateData.password,
-                    id: a.routeId
+                    oldPassword: stateData.oldPassword,
+                    password: stateData.newPassword,
+                    id: a.routeUserId
 
                 }
+
+                console.log(b)
                 try {
-                    const response = await axiosPatchWithoutToken(BaseUrl + 'users/update-password',
+
+                    const response = await axiosPatchWithoutToken(BaseUrl +
+                        'users/update-password',
                         b
                     )
                     setStateActivityIndicator(false)
@@ -103,7 +122,7 @@ const UpdatePassword = (props) => {
 
                     if (response.data.success) {
                         SweetAlert.showAlertWithOptions({
-                            title: 'Password Successfully Updated ',
+                            title: 'Password Successfully Updated',
                             //  subTitle: '',
                             confirmButtonTitle: 'OK',
 
@@ -111,23 +130,18 @@ const UpdatePassword = (props) => {
 
                             style: 'success',
                             //cancellable: true
-                        }),
-                            props.navigation.navigate("VerificationCode")
+                        },
+                            // callback => console.log('callback')
+                        );
+
+                        props.navigation.goBack()
                     }
                     else {
-
                         alert(response.data.message)
                     }
-
-                    setStateActivityIndicator(true)
-                    setStateIsValidPasswordConfirmPassword(true)
-                    props.navigation.navigate("Login")
-                    
                 }
                 catch (e) {
-                    setStateActivityIndicator(true)
                     alert(e)
-
                 }
 
 
@@ -145,7 +159,7 @@ const UpdatePassword = (props) => {
 
 
                     <HeaderAddProfile
-                        text1="Update Password"
+                        text1="Change Password"
                         text2="Lorem ipsum dolor sit amet"
                         onPress={() => {
 
@@ -164,24 +178,48 @@ const UpdatePassword = (props) => {
                         <TextInputPasswordWithoutsvg
                             autoFocus={true}
                             showSoftInputOnFocus={stateShowSoftInputOnFocus}
-                            onSubmitEditing={() => ref_input2.current.focus()}
-                            entypo={statePasswordShow ?
+                            onSubmitEditing={() => ref_input1.current.focus()}
+                            entypo={stateOldPasswordShow ?
                                 "eye" :
                                 "eye-with-line"}
-                            secureTextEntry={statePasswordShow}
+                            secureTextEntry={stateOldPasswordShow}
 
-                            label="Password"
+                            label="OldPassword"
                             onChangeText={(text) => {
-                                setStateIsValidPassword(true)
+                                setStateIsValidOldPassword(true)
                                 setStateData({
-                                    ...stateData, password: text
+                                    ...stateData, oldPassword: text
                                 })
                             }}
                             onPress={() => {
-                                setStatePasswordShow(!statePasswordShow)
+                                setStateOldPasswordShow(!stateOldPasswordShow)
                             }}
                         />
-                        {stateIsValidPassword == false ? <Text style={{ color: 'red' }}>Enter Valid Password</Text> : null}
+                        {stateIsValidOldPassword == false ? <Text style={{ color: 'red' }}>Enter Valid Old Password</Text> : null}
+                    </View>
+                    <View style={{ marginTop: '5%' }}>
+                        <TextInputPasswordWithoutsvg
+
+                            refs={ref_input1}
+                            showSoftInputOnFocus={stateShowSoftInputOnFocus}
+                            onSubmitEditing={() => ref_input2.current.focus()}
+                            entypo={stateNewPasswordShow ?
+                                "eye" :
+                                "eye-with-line"}
+                            secureTextEntry={stateNewPasswordShow}
+
+                            label="NewPassword"
+                            onChangeText={(text) => {
+                                setStateIsValidNewPassword(true)
+                                setStateData({
+                                    ...stateData, newPassword: text
+                                })
+                            }}
+                            onPress={() => {
+                                setStateNewPasswordShow(!stateNewPasswordShow)
+                            }}
+                        />
+                        {stateIsValidNewPassword == false ? <Text style={{ color: 'red' }}>Enter Valid New Password</Text> : null}
                     </View>
 
                     <View style={{ marginTop: '5%' }}>
@@ -207,7 +245,7 @@ const UpdatePassword = (props) => {
                     </View>
 
                     <View style={{
-                        marginTop: '80%',
+                        marginTop: '50%',
                         marginBottom: '10%'
                     }}>
                         {stateActivityIndicator ?
@@ -231,4 +269,4 @@ const UpdatePassword = (props) => {
     );
 };
 
-export default UpdatePassword;
+export default UserChangePassword;

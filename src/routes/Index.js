@@ -31,6 +31,7 @@ import VedioPlayer from '../screens/vedioplayer/VedioPlayer';
 import ForgetPassword from '../screens/forgetpassword/ForgetPassword';
 import VerificationCode from '../screens/verificationcode/VerificationCode';
 import UpdatePassword from '../screens/updatepassword/UpdatePassword';
+import UserChangePassword from '../screens/userchangepassword/UserChangePassword';
 
 
 
@@ -87,6 +88,11 @@ const Index = props => {
                         }} />
 
                     <Stack.Screen name="UpdatePassword" component={UpdatePassword}
+
+                        options={{
+                            headerShown: false,
+                        }} />
+                    <Stack.Screen name="UserChangePassword" component={UserChangePassword}
 
                         options={{
                             headerShown: false,

@@ -13,7 +13,7 @@ import COLORS from '../../utills/colors/Color';
 import Entypo from 'react-native-vector-icons/Entypo'
 import Svgs from '../../utills/svgs/Svgs';
 import Button1 from '../../components/button1/Button1';
-import { TouchableRipple } from 'react-native-paper';
+import { ActivityIndicator, TouchableRipple } from 'react-native-paper';
 import HeaderAddProfile from '../../components/headeraddprofile/HeaderAddProfile';
 import ImagePicker from 'react-native-image-crop-picker';
 import RBSheet from 'react-native-raw-bottom-sheet';
@@ -30,16 +30,18 @@ import {
 
 import Style from './Style'
 import SmallButtonPropsTextStyle from '../../components/smallbuttonpropstextstyle/SmallButtonPropsTextStyle';
+import BaseUrl from '../../url/Urls';
+import { axiosPostWithoutToken } from '../../utills/axioshelper/axiosHelper';
 
 
 
 const CELL_COUNT = 4;
 const VerificationCode = (props) => {
 
+    const a = props.route.params;
 
 
-
-
+    const [stateActivityIndicator, setStateActivityIndicator] = useState(false)
 
 
 
@@ -72,7 +74,31 @@ const VerificationCode = (props) => {
         }
         if (value.length == 4) {
 
-            props.navigation.navigate("UpdatePassword")
+            let body = {
+                id: a.routeId,
+                enteredOTP: value
+            }
+            setStateActivityIndicator(true)
+            axiosPostWithoutToken(BaseUrl + 'users/verify-otp',
+                body)
+                .then((response) => {
+                    console.log(response.data)
+                    setStateActivityIndicator(false)
+                    if (response.data.success) {
+                        props.navigation.navigate("UpdatePassword", {
+                            routeId: response.data.userId
+                        })
+                    }
+                    else {
+                        alert(response.data.message)
+                    }
+
+                })
+                .catch((err) => {
+                    setStateActivityIndicator(false)
+                    alert(err)
+                })
+
         }
     }
 
@@ -97,13 +123,21 @@ const VerificationCode = (props) => {
 
 
             <View style={{
-                marginTop: '15%',
+                marginTop: '2%',
                 flex: 1,
                 //  backgroundColor: 'red',
-                marginHorizontal: '10%'
+                marginHorizontal: '5%'
             }}>
 
+                <View style={{
+                    alignItems: "center",
+                    marginBottom: '8%'
+                }}>
+                    <Text style={{ color: 'red' }}>
+                        Token expired in 1 minute</Text>
 
+
+                </View>
                 <View style={{
                     alignItems: "center",
                     marginBottom: '3%'
@@ -163,10 +197,17 @@ const VerificationCode = (props) => {
                     marginBottom: '10%'
                     //     backgroundColor: 'green'
                 }}>
-                    <Button1 text="Send Code"
-                        onPress={() => {
-                            confirmCode()
-                        }} />
+
+                    {stateActivityIndicator ?
+                        <ActivityIndicator animating={stateActivityIndicator}
+                            color={COLORS.themecolorred} /> :
+
+                        <Button1 text="Send Code"
+                            onPress={() => {
+                                confirmCode()
+                            }} />
+
+                    }
                 </View>
 
             </View>

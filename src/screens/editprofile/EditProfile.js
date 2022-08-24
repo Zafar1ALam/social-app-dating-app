@@ -33,8 +33,9 @@ import { useIsFocused } from '@react-navigation/native';
 import { axiosGet, axiosPatch } from '../../utills/axioshelper/axiosHelper';
 import SweetAlert from 'react-native-sweet-alert';
 
-const EditProfile = (props) => {
 
+const EditProfile = (props) => {
+    const isFocused = useIsFocused();
     const [checked, setChecked] = React.useState();
     const [checkedId, setCheckedId] = useState('');
     const [stateActivityIndicator, setStateActivityIndicator] = useState(false)
@@ -124,8 +125,7 @@ const EditProfile = (props) => {
                             console.log(response.data)
                             if (response.data.success) {
                                 setStateListGenders(response.data.genders)
-                                setChecked(response.data.genders[0].name)
-                                setCheckedId(response.data.genders[0]._id)
+
                             }
                             else {
                                 alert(response.data.message)
@@ -146,11 +146,14 @@ const EditProfile = (props) => {
                             ...stateData,
                             userName: responseUserData.data.user.username,
                             dob: date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear(),
+                            backendDob: responseUserData.data.user.DOB,
                             city: responseUserData.data.user.city,
 
                             asyncUserId: parseAsyncValue.id
                         }
                     )
+
+                    setCheckedId(responseUserData.data.user.gender._id)
                     setChecked(responseUserData.data.user.gender.name)
 
 
@@ -168,7 +171,7 @@ const EditProfile = (props) => {
             }
         }
         getSingleValue()
-    }, [])
+    }, [isFocused])
 
 
 
@@ -248,6 +251,7 @@ const EditProfile = (props) => {
 
             }
             console.log(b)
+            //   setStateActivityIndicator(false)
             const updateProfile = await axiosPatch(BaseUrl + 'users/update', b
             )
             setStateActivityIndicator(false)
@@ -274,6 +278,7 @@ const EditProfile = (props) => {
                     style: 'success',
                     //cancellable: true
                 },
+                    props.navigation.goBack()
                 )
 
             }
@@ -307,6 +312,8 @@ const EditProfile = (props) => {
                         </View>
                         :
                         <>
+
+
                             <View style={{ marginTop: '5%' }}>
                                 <TextInputWIthoutSvg
                                     refs={ref_input1}
@@ -318,7 +325,8 @@ const EditProfile = (props) => {
                                     onChangeText={(text) => {
                                         setStateIsValidUserName(true)
                                         setStateData({
-                                            ...stateData, userName: text
+                                            ...stateData,
+                                            userName: text
                                         })
                                     }} />
                                 {stateIsValidUserName == false ? <Text style={{ color: 'red' }}>Enter Valid User Name</Text> : null}
@@ -390,6 +398,23 @@ const EditProfile = (props) => {
                                     {stateIsValidDob == false ? <Text style={{ color: 'red' }}>Enter Valid Date of Birth</Text> : null}
                                 </>
                             </TouchableRipple>
+
+
+                            <TouchableRipple style={{
+                                marginTop: '4%',
+                                alignSelf: 'flex-end',
+                                // backgroundColor: 'red',
+
+                                paddingVertical: "2%",
+                                paddingHorizontal: '2%'
+                            }} onPress={() => {
+                                props.navigation.navigate("UserChangePassword",
+                                    { routeUserId: stateData.asyncUserId })
+                            }}
+                                rippleColor={COLORS.themecolorred}
+                            >
+                                <Text style={STYLES.fontSize13_grey3C3C43_FontsFree_Net_SFProText_Medium}>Change Password</Text>
+                            </TouchableRipple>
                             <View style={{
                                 marginTop: '50%',
                                 marginBottom: '5%',
@@ -405,6 +430,9 @@ const EditProfile = (props) => {
                                         }} />
                                 }
                             </View>
+
+
+
 
                         </>
 
@@ -449,7 +477,7 @@ const EditProfile = (props) => {
                                 >
                                     <RadioButton color={COLORS.whiteFFFFFF}
                                         uncheckedColor={COLORS.whiteFFFFFF}
-                                        value="Male"
+                                        value={checked}
                                         status={checked === item.name ? 'checked' : 'unchecked'}
                                         onPress={() => {
                                             setChecked(item.name)

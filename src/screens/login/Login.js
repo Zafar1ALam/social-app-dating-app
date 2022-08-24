@@ -81,7 +81,7 @@ const Login = (props) => {
 
             })
                 .then(response => {
-                    setStateActivityIndicator(false)
+
 
                     console.log(response.data)
                     if (response.data.success) {
@@ -90,6 +90,7 @@ const Login = (props) => {
                     else {
                         alert(response.data.message)
                     }
+                    setStateActivityIndicator(false)
 
                 })
                 .catch(error => {

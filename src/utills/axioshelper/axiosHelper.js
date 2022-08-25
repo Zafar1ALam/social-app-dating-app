@@ -22,7 +22,6 @@ const getConfig = async () => {
 export const axiosGet = async (url) =>
     await axios.get(url, await getConfig())
 export const axiosPatch = async (url, body) => {
-    console.log(url, body)
 
     return await axios.patch(url, body, await getConfig())
 
@@ -31,7 +30,7 @@ export const axiosPatch = async (url, body) => {
 
 
 export const axiosPost = async (url, body) => {
-    console.log(url, body)
+
 
     return await axios.post(url, body, await getConfig())
 
@@ -39,9 +38,15 @@ export const axiosPost = async (url, body) => {
 
 
 export const axiosPut = async (url, body) => {
-    console.log(url, body)
+
 
     return await axios.put(url, body, await getConfig())
+
+}
+
+export const axiosDelete = async (url) => {
+
+    return await axios.delete(url, await getConfig())
 
 }
 

@@ -611,6 +611,11 @@ const Svgs = {
   svgVedioPauseButton: `<svg xmlns="http://www.w3.org/2000/svg" width="44.875" height="44.875" viewBox="0 0 34.875 34.875">
 <path id="Icon_awesome-play-circle" data-name="Icon awesome-play-circle" d="M18,.563A17.438,17.438,0,1,0,35.438,18,17.434,17.434,0,0,0,18,.563Zm8.135,19.125-12.375,7.1a1.691,1.691,0,0,1-2.51-1.477V10.688a1.692,1.692,0,0,1,2.51-1.477l12.375,7.523A1.693,1.693,0,0,1,26.135,19.688Z" transform="translate(-0.563 -0.563)" fill="#fff"/>
 </svg>
+`,
+  svgFlip: `
+<svg xmlns="http://www.w3.org/2000/svg" width="27" height="33" viewBox="0 0 27 33">
+  <path id="Icon_material-flip" data-name="Icon material-flip" d="M22.5,31.5h3v-3h-3Zm6-18h3v-3h-3Zm-24-6v21a3.009,3.009,0,0,0,3,3h6v-3h-6V7.5h6v-3h-6A3.009,3.009,0,0,0,4.5,7.5Zm24-3v3h3A3.009,3.009,0,0,0,28.5,4.5Zm-12,30h3V1.5h-3Zm12-9h3v-3h-3Zm-6-18h3v-3h-3Zm6,12h3v-3h-3Zm0,12a3.009,3.009,0,0,0,3-3h-3Z" transform="translate(-4.5 -1.5)" fill="#fff"/>
+</svg>
 `
 }
 

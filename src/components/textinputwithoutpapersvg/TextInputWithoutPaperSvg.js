@@ -17,10 +17,11 @@ const TextInputWithoutPaperSvg = props => {
                 style={[props.style,
                 {
 
-
                 }]}
+
+                keyboardType={props.keyboardType}
                 editable={props.editable}
-                onChange={props.onChange} />
+                onChangeText={props.onChangeText} />
         </View>
     );
 };

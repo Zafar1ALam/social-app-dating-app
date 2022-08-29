@@ -78,7 +78,8 @@ const ForgetPassword = (props) => {
             console.log(b)
 
             try {
-                const emailSend = await axiosPostWithoutToken(BaseUrl + 'users/generate-otp',
+                const emailSend = await axiosPostWithoutToken(BaseUrl +
+                    'users/generate-otp',
                     b
                 )
 

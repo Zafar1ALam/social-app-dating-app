@@ -39,8 +39,9 @@ const Profile = (props) => {
         if (value != null) {
             const a = JSON.parse(value)
             console.log(a)
+            const b = 'id=' + a.id
             setStateAsyncUserData(a)
-            axiosGet(BaseUrl + 'users/get/' + a.id)
+            axiosGet(BaseUrl + 'users/get?' + b)
                 .then((responseProfile) => {
                     console.log(responseProfile.data)
                     if (responseProfile.data.success) {

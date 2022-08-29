@@ -95,7 +95,8 @@ const UpdatePassword = (props) => {
 
                 }
                 try {
-                    const response = await axiosPatchWithoutToken(BaseUrl + 'users/update-password',
+                    const response = await axiosPatchWithoutToken(BaseUrl
+                        + 'users/update-password',
                         b
                     )
                     setStateActivityIndicator(false)
@@ -122,7 +123,7 @@ const UpdatePassword = (props) => {
                     setStateActivityIndicator(true)
                     setStateIsValidPasswordConfirmPassword(true)
                     props.navigation.navigate("Login")
-                    
+
                 }
                 catch (e) {
                     setStateActivityIndicator(true)

@@ -133,9 +133,9 @@ const EditProfile = (props) => {
 
                         })
 
-
+                    const b = 'id=' + parseAsyncValue.id
                     const responseUserData = await axiosGet(
-                        BaseUrl + 'users/get/' + parseAsyncValue.id,
+                        BaseUrl + 'users/get?' + b,
 
                     )
                     console.log(responseUserData.data)

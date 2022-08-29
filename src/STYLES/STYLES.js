@@ -191,7 +191,12 @@ const STYLES = StyleSheet.create({
         color: COLORS.grey5D5D5D_62,
 
     },
+    fontSize18_themecolorred_OpenSans_Bold_300: {
+        fontSize: 16,
+        fontFamily: 'OpenSans-Light',
+        color: COLORS.themecolorred,
 
+    },
     fontSize18_whiteFFFFFF_OpenSans_Bold_300: {
         fontSize: 16,
         fontFamily: 'OpenSans-Light',

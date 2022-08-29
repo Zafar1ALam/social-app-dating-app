@@ -1,9 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {
+    useState, useRef, useEffect, useCallback,
+
+} from 'react';
 import {
     Dimensions, Image, SafeAreaView, View, TouchableOpacity,
-    StyleSheet, Animated
+    StyleSheet, Animated, Modal, FlatList
 } from 'react-native';
-import { ActivityIndicator, Text, TouchableRipple } from 'react-native-paper';
+import {
+    ActivityIndicator, Text, TouchableRipple,
+    RadioButton
+} from 'react-native-paper';
 import LeftTextRightDoubleIcon from '../../components/lefttextrightdoubleicon/LeftTextRightDoubleIcon';
 import STYLES from '../../STYLES/STYLES';
 import Carousel, { Pagination } from 'react-native-snap-carousel';
@@ -27,7 +33,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import SweetAlert from 'react-native-sweet-alert';
 import Button1 from '../../components/button1/Button1';
 import TextInputWithoutPaperSvg from '../../components/textinputwithoutpapersvg/TextInputWithoutPaperSvg';
-
+import axios from 'axios';
+import RNFetchBlob from 'rn-fetch-blob';
 
 
 
@@ -37,6 +44,14 @@ var page = 1
 const FindMatch = (props) => {
 
     const refCardsSwipe = useRef()
+
+    const [checked, setChecked] = React.useState('');
+    const [checkedLocationPlaceNearBy, setCheckedLocationPlaceNearBy] = React.useState(true);
+    const [checkedId, setCheckedId] = useState('');
+    const [stateIsValidChecked, setStateIsValidChecked] = useState(true)
+    const [stateIsValidPlace, setStateIsValidPlace] = useState(true)
+    const [stateIsValidRadius, setStateIsValidRadius] = useState(true)
+
     const [stateActivityIndicatorBody, setStateActivityIndicatorBody] = useState(false)
     const [stateActivityIndicatorPostDetail, setStateActivityIndictorPostDetail] = useState(false)
     const [stateActivityIndicatorUndo, setStateActivityIndicatorUndo] = useState(false)
@@ -44,11 +59,24 @@ const FindMatch = (props) => {
     const refRBSheetViewProfilesOfMatches = useRef();
     const refRBSheetPostDetail = useRef();
     const refRBSheetAgeRange = useRef();
-
+    const refRBSheetLocation = useRef();
+    const [viewedItems, setViewedItems] = useState([]);
     const [stateSourceList, setStateSourceList] = useState([])
 
     const [stateSwipesList, setStateSwipesList] = useState([])
 
+    const [visible, setVisible] = useState(false);
+
+    const showModal = () => setVisible(true);
+
+    const onDismiss = useCallback(() => { setVisible(false) }, [])
+
+
+    const [visibleLocationModal, setVisibleLocationModal] = useState(false);
+
+    const showModalLocation = () => setVisibleLocationModal(true);
+
+    const onDismissLocationModal = useCallback(() => { setVisibleLocationModal(false) }, [])
 
     const [stateLimit, setStateLimit] = useState(10);
 
@@ -65,8 +93,28 @@ const FindMatch = (props) => {
     const [stateIsValidMaxAge, setStateIsValidMaxAge] = useState(true)
     const [stateData, setStateData] = useState({
         minAge: '',
-        maxAge: ''
+        maxAge: '',
+        place: '',
+        radius: '',
+
     })
+
+
+
+    const [stateListGenders, setStateListGenders] = useState([
+        // {
+        //     id: 1,
+        //     name: "student"
+        // },
+        // { id: 2, name: "student" },
+        // { id: 3, name: "student" },
+        // { id: 14, name: "student" },
+        // { id: 15, name: "student" },
+        // { id: 16, name: "student" },
+        // { id: 17, name: "student" },
+    ])
+    console.log('a')
+
 
     useEffect(() => {
 
@@ -95,13 +143,26 @@ const FindMatch = (props) => {
 
 
                         //    setStateActivityIndicator(false)
-                        //   console.log(response.data.users)
+                        console.log(response.data.users)
 
                         if (response.data.success) {
-                            //        console.log('sdfggfd')
-                            setStateActivityIndicatorBody(false)
-                            setCards(response.data.users)
-                            setStateSourceList(response.data.users)
+                            const getGenderResponse = await axios.get(BaseUrl + 'genders/getAll')
+
+
+                            console.log(getGenderResponse.data)
+                            if (getGenderResponse.data.success) {
+                                setStateListGenders(getGenderResponse.data.genders)
+                                setStateActivityIndicatorBody(false)
+                                setCards(response.data.users)
+                                setStateSourceList(response.data.users)
+                            }
+                            else {
+                                alert(getGenderResponse.data.message)
+                            }
+
+
+
+
                         }
                         else {
                             setStateActivityIndicatorBody(false)
@@ -115,6 +176,7 @@ const FindMatch = (props) => {
 
                 }
             } catch (error) {
+                alert(error)
                 // Error retrieving data
             }
         }
@@ -329,6 +391,7 @@ const FindMatch = (props) => {
 
             }
             else {
+                stateSwipesList.push(response.data.swipe)
                 const filteredData = cards.filter(item => item._id !== card._id);
                 //   console.log(filteredData)
                 setCards(filteredData);
@@ -377,6 +440,11 @@ const FindMatch = (props) => {
 
             }
             else {
+                stateSwipesList.push(response.data.swipe)
+                const filteredData = cards.filter(item => item._id !== card._id);
+                //   console.log(filteredData)
+                setCards(filteredData);
+                alert(response.data.message)
                 alert(response.data.message)
             }
         }
@@ -496,14 +564,18 @@ const FindMatch = (props) => {
         ) {
             setStateActivityIndicatorBody(true)
             refRBSheetAgeRange.current.close()
-            let b = 'min_age=' + stateData.minAge + '&max_age=' + stateData.maxAge
+            let b = 'min_age=' + stateData.minAge + '&max_age=' + stateData.maxAge +
+                '&lat=' + 33.655127 + '&long=' + 73.069704
             try {
                 const response = await axiosGet(BaseUrl + 'users/getAll?' + b)
                 console.log(response.data.users)
                 if (response.data.success) {
                     refRBSheetAgeRange.current.close()
-                    setCards(response.data.users)
+
                     setStateActivityIndicatorBody(false)
+                    setCards(response.data.users)
+                    setStateSourceList(response.data.users)
+
                 } else {
                     refRBSheetAgeRange.current.close()
                     setStateActivityIndicatorBody(false)
@@ -517,6 +589,227 @@ const FindMatch = (props) => {
             }
         }
     }
+
+
+    const filterGender = async () => {
+        if (checked == '' || checkedId == '') {
+
+            setStateIsValidChecked(false)
+
+
+
+        }
+        if (checked != '' && checkedId != '') {
+            setStateActivityIndicatorBody(true)
+            onDismiss()
+
+            let b = "gender=" + checkedId + '&lat=' + 33.655127 + '&long=' + 73.069704
+            console.log(b)
+            try {
+                const response = await axiosGet(BaseUrl + 'users/getAll?' + b)
+                console.log('kjhgvdjnbv')
+
+                console.log('response.data.success')
+                console.log(response.data.success)
+                if (response.data.success) {
+                    onDismiss()
+                    console.log(response.data)
+
+                    setStateActivityIndicatorBody(false)
+                    setCards(response.data.users)
+                    setStateSourceList(response.data.users)
+                } else {
+
+                    onDismiss()
+                    alert(response.data.message)
+                }
+            }
+            catch (err) {
+                onDismiss()
+                setStateActivityIndicatorBody(false)
+                alert(err)
+            }
+
+
+        }
+    }
+
+
+    const filterLocation = async () => {
+
+        if (checkedLocationPlaceNearBy) {
+
+            if (stateData.place == '') {
+                //   console.log(stateData.email + 'emailaddress')
+                setStateIsValidPlace(false)
+
+                return;
+
+            }
+            else {
+                setStateActivityIndicatorBody(true)
+                let b = "long=" + 73.026354 + "lat=" + 33.712876
+                console.log(b)
+                refRBSheetLocation.current.close()
+                try {
+                    const response = await axiosGet(BaseUrl + 'users/getAll?' + b)
+
+
+
+                    console.log(response.data.success)
+                    if (response.data.success) {
+                        refRBSheetLocation.current.close()
+                        console.log(response.data)
+
+                        setStateActivityIndicatorBody(false)
+                        setCards(response.data.users)
+                        setStateSourceList(response.data.users)
+                    } else {
+
+                        refRBSheetLocation.current.close()
+                        alert(response.data.message)
+                    }
+                }
+                catch (err) {
+                    refRBSheetLocation.current.close()
+                    setStateActivityIndicatorBody(false)
+                    alert(err)
+                }
+            }
+
+
+        }
+
+        if (!checkedLocationPlaceNearBy) {
+
+            if (stateData.radius == '') {
+                //   console.log(stateData.email + 'emailaddress')
+                setStateIsValidRadius(false)
+
+                return;
+
+            }
+            else {
+
+                setStateActivityIndicatorBody(true)
+                let b = "long=" + 73.026354 + "lat=" + 33.712876 + 'radius=' + stateData.radius
+                console.log(b)
+                try {
+                    const response = await axiosGet(BaseUrl + 'users/getAll?' + b)
+
+
+
+                    console.log(response.data.success)
+                    if (response.data.success) {
+                        refRBSheetLocation.current.close()
+                        console.log(response.data)
+
+                        setStateActivityIndicatorBody(false)
+                        setCards(response.data.users)
+                        setStateSourceList(response.data.users)
+                    } else {
+
+                        refRBSheetLocation.current.close()
+                        alert(response.data.message)
+                    }
+                }
+                catch (err) {
+                    refRBSheetLocation.current.close()
+                    setStateActivityIndicatorBody(false)
+                    alert(err)
+                }
+            }
+
+        }
+
+
+
+
+
+
+
+
+
+    }
+
+
+    const filterPosts = async () => {
+        try {
+            setStateActivityIndicatorBody(true)
+            a = 'sortByPosts=' + 'true' + '&lat=' + 33.655127 + '&long=' + 73.069704
+            const response = await axiosGet(BaseUrl + 'users/getAll/?' +
+                a)
+            if (response.data.success) {
+                console.log('response get post data')
+                console.log(response.data)
+
+
+                setStateActivityIndicatorBody(false)
+                setCards(response.data.users)
+                setStateSourceList(response.data.users)
+            }
+            else {
+                alert(response.data.message)
+                setStateActivityIndicatorBody(false)
+            }
+        }
+        catch (err) {
+            alert(err)
+            setStateActivityIndicatorBody(false)
+        }
+    }
+
+
+    const downloadImage = (url) => {
+        // Main function to download the image
+
+        // To add the time suffix in filename
+        let date = new Date();
+        // Image URL which we want to download
+        let image_URL = url;
+        // Getting the extention of the file
+        let ext = getExtention(image_URL);
+        ext = '.' + ext[0];
+        // Get config and fs from RNFetchBlob
+        // config: To pass the downloading related options
+        // fs: Directory path where we want our image to download
+        const { config, fs } = RNFetchBlob;
+        let PictureDir = fs.dirs.PictureDir;
+        let options = {
+            fileCache: true,
+            addAndroidDownloads: {
+                // Related to the Android only
+                useDownloadManager: true,
+                notification: true,
+                path:
+                    PictureDir +
+                    '/image_' +
+                    Math.floor(date.getTime() + date.getSeconds() / 2) +
+                    ext,
+                description: 'Image',
+            },
+        };
+        config(options)
+            .fetch('GET', image_URL)
+            .then(res => {
+                // Showing alert after successful downloading
+                console.log('res -> ', JSON.stringify(res));
+                alert('Image Downloaded Successfully.');
+            });
+    };
+
+
+
+
+
+
+
+
+    const getExtention = filename => {
+        // To get the file extension
+        return /[.]/.exec(filename) ?
+            /[^.]+$/.exec(filename) : undefined;
+    };
 
     return (
         <SafeAreaView style={STYLES.withoutpaddingcontainer}
@@ -632,23 +925,23 @@ const FindMatch = (props) => {
 
 
                                     },
-                                    maybe: {
-                                        onAction: handleMaybe,
-                                        containerStyle: {
-                                            marginBottom: '40%',
+                                    // maybe: {
+                                    //     onAction: handleMaybe,
+                                    //     containerStyle: {
+                                    //         marginBottom: '40%',
 
-                                            borderWidth: 0
-                                        },
+                                    //         borderWidth: 0
+                                    //     },
 
-                                        view:
-                                            <View style={{
+                                    //     view:
+                                    //         <View style={{
 
-                                            }}>
-                                                <SvgXml xml={Svgs.svgStar} />
-                                            </View>
-                                    },
+                                    //         }}>
+                                    //             <SvgXml xml={Svgs.svgStar} />
+                                    //         </View>
+                                    // },
                                 }}
-                                hasMaybeAction={true}
+                            //       hasMaybeAction={true}
 
                             // If you want a stack of cards instead of one-per-one view, activate stack mode
                             // stack={true}
@@ -665,7 +958,8 @@ const FindMatch = (props) => {
                         <View style={{
                             flexDirection: 'row',
                             marginTop: '15%',
-
+                            width: '70%',
+                            alignSelf: 'center',
                             marginHorizontal: '7%',
                             flex: 0.15,
                             //backgroundColor: 'red',
@@ -728,7 +1022,7 @@ const FindMatch = (props) => {
 
                             </TouchableRipple>
 
-                            <TouchableRipple onPress={() => {
+                            {/* <TouchableRipple onPress={() => {
                                 refCardsSwipe.current.swipeMaybe()
                                 // setStateShowStar(true)
                                 // setTimeout(() => {
@@ -748,11 +1042,98 @@ const FindMatch = (props) => {
 
                                 <Entypo name="star" size={24} color={COLORS.whiteFFFFFF} />
 
-                            </TouchableRipple>
+                            </TouchableRipple> */}
                         </View>
                     </>
                 }
             </LinearGradient>
+
+
+
+            <Modal visible={visible}
+                transparent={true}
+
+                onRequestClose={onDismiss}
+
+
+
+            >
+                <View style={{
+                    width: '80%',
+                    alignSelf: 'center',
+                    flex: 1,
+
+                    justifyContent: 'center'
+                }}>
+                    <View style={{
+                        paddingVertical: '5%',
+                        backgroundColor: COLORS.whiteFFFFFF,
+                        marginHorizontal: '5%',
+                        borderRadius: 25,
+
+                        paddingHorizontal: '5%'
+                    }}>
+
+
+                        {stateListGenders.map((item, index) => {
+                            return (
+                                <View style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    marginVertical: '1%',
+
+                                }}
+                                    key={index}
+                                >
+                                    <RadioButton color={COLORS.themecolorred}
+                                        uncheckedColor={COLORS.themecolorred}
+                                        value={checked}
+                                        status={checked === item.name ? 'checked' : 'unchecked'}
+                                        onPress={() => {
+                                            setChecked(item.name)
+                                            console.log(item)
+                                            setStateIsValidChecked(true)
+                                            setCheckedId(item._id)
+                                        }}
+                                    />
+
+                                    <View style={{ marginLeft: '5%' }}>
+                                        <Text style={STYLES.fontSize18_themecolorred_OpenSans_Bold_300}>{item.name}</Text>
+                                    </View>
+
+                                </View>
+                            )
+                        })}
+                        {stateIsValidChecked == false ? <Text style={{ color: 'red' }}>Select Valid Gender</Text> : null}
+
+
+                        <View style={{
+
+                            marginHorizontal: '5%',
+                            marginTop: '10%'
+                        }}>
+
+
+                            <Button1 text="Select"
+                                textStyle={STYLES.fontSize14_whiteFFFFFF_OpenSans_Bold_700}
+
+                                onPress={() => {
+                                    filterGender()
+
+
+                                }} />
+
+                        </View>
+                    </View>
+
+                </View>
+
+
+            </Modal>
+
+
+
+
             <RBSheet
                 closeOnPressMask={false}
                 closeOnDragDown={false}
@@ -802,6 +1183,7 @@ const FindMatch = (props) => {
                         <TouchableOpacity onPress={() => {
 
                             refRBSheetViewProfilesOfMatches.current.close()
+                            filterPosts()
                         }}
                             style={{ flex: 1 }}>
                             <Text style={STYLES.fontSize18_grey5D5D5D_62_Arial_400_62}>
@@ -815,13 +1197,15 @@ const FindMatch = (props) => {
                         <SvgXml xml={Svgs.svgBioVPOM} style={{ marginRight: '5%' }} />
                         <TouchableOpacity onPress={() => {
                             refRBSheetViewProfilesOfMatches.current.close()
+                            showModal()
+
                             // props.navigation.push("TellUsAboutYourself", {
                             //     findMatch: true
                             // })
                         }}
                             style={{ flex: 1 }}>
                             <Text style={STYLES.fontSize18_grey5D5D5D_62_Arial_400_62}>
-                                bio</Text>
+                                gender</Text>
                         </TouchableOpacity>
                     </View>
                     <View style={{
@@ -831,9 +1215,7 @@ const FindMatch = (props) => {
                         <SvgXml xml={Svgs.svgLocationVPOM} style={{ marginRight: '5%' }} />
                         <TouchableOpacity onPress={() => {
                             refRBSheetViewProfilesOfMatches.current.close()
-                            // props.navigation.push("YourLocation", {
-                            //     findMatch: true
-                            // })
+                            refRBSheetLocation.current.open()
                         }}
                             style={{ flex: 1 }}>
                             <Text style={STYLES.fontSize18_grey5D5D5D_62_Arial_400_62}>
@@ -854,7 +1236,7 @@ const FindMatch = (props) => {
                                 age</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={{
+                    {/* <View style={{
                         flexDirection: 'row',
                         alignItems: 'center'
                     }}>
@@ -869,7 +1251,7 @@ const FindMatch = (props) => {
                             <Text style={STYLES.fontSize18_grey5D5D5D_62_Arial_400_62}>
                                 profile photo </Text>
                         </TouchableOpacity>
-                    </View>
+                    </View> */}
                 </View>
             </RBSheet >
 
@@ -964,7 +1346,11 @@ const FindMatch = (props) => {
                                         {statePostDetail?.user?.firstName}, {statePostDetail?.user?.age}     </Text>
                                 </View>
                                 <TouchableRipple
-                                    onPress={() => console.log('download')
+                                    onPress={() => {
+                                        console.log('download')
+                                        downloadImage(ImageUrl + statePostDetail?.user?.pfp)
+
+                                    }
                                     }
                                     style={{
                                         justifyContent: 'center',
@@ -997,6 +1383,175 @@ const FindMatch = (props) => {
                 </View>
             </RBSheet >
 
+            <RBSheet
+                // closeOnDragDown={true}
+                closeOnPressMask={false}
+                dragFromTopOnly={true}
+                height={300}
+                animationType="slide"
+                ref={refRBSheetLocation}
+
+
+                // closeOnPressBack={false}
+                customStyles={{
+                    container: {
+                        //borderRadius: 40,
+                        backgroundColor: COLORS.whiteFFFFFF,
+                        paddingVertical: "5%",
+                        borderTopLeftRadius: 25,
+                        borderTopRightRadius: 25,
+                    },
+
+                }}
+
+
+            >
+
+                <View style={{ flex: 1, paddingHorizontal: '6%' }}>
+                    <View style={{
+                        flexDirection: 'row', justifyContent:
+                            'space-between',
+                        alignItems: 'center',
+                        marginBottom: '5%'
+                    }}>
+                        <Text style={
+                            STYLES.fontSize24_themecolorred_Hybi11AmigoBold_700
+                        }>Add Location</Text>
+
+                        <TouchableRipple
+                            onPress={() => refRBSheetLocation.current.close()
+                            }
+                            style={{
+                                justifyContent: 'center',
+                                // backgroundColor: 'red',
+                                paddingHorizontal: '2%',
+                                paddingVertical: '2%'
+
+                            }}
+                            rippleColor="rgba(0,0,0,0.15)">
+                            <SvgXml xml={Svgs.crossGrey} />
+
+                        </TouchableRipple>
+                    </View>
+
+
+
+
+
+
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: "center"
+                    }}>
+
+                        <RadioButton color={COLORS.themecolorred}
+                            uncheckedColor={COLORS.themecolorred}
+
+                            status={checkedLocationPlaceNearBy == true ? 'checked' : 'unchecked'}
+                            onPress={() => {
+                                setCheckedLocationPlaceNearBy(true)
+                            }}
+                        />
+
+                        <View>
+                            <Text style={STYLES.fontSize18_grey707070_Arial_400}>Place</Text>
+                        </View>
+
+                        <View style={{
+                            flex: 1,
+                            marginLeft: '5%'
+                        }}>
+                            <TextInputWithoutPaperSvg
+
+                                value={stateData.place}
+                                style={
+                                    STYLES.fontSize18_themecolorred_Arial_400}
+                                onChangeText={(text) => {
+                                    setStateIsValidPlace(true)
+                                    setStateData({
+                                        ...stateData, place: text
+                                    })
+                                }}
+
+                            />
+                            {stateIsValidPlace == false ? <Text style={{ color: 'red' }}>Enter Valid Place</Text> : null}
+                        </View>
+                    </View>
+
+
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: "center",
+                        marginTop: '3%'
+                    }}>
+
+                        <RadioButton color={COLORS.themecolorred}
+                            uncheckedColor={COLORS.themecolorred}
+
+                            status={checkedLocationPlaceNearBy === true ? 'unchecked' : 'checked'}
+                            onPress={() => {
+                                setCheckedLocationPlaceNearBy(false)
+                            }}
+                        />
+
+
+
+                        <View style={{
+                            flex: 0.7,
+                            marginLeft: '5%',
+                            marginRight: '15%'
+                        }}>
+                            <TextInputWithoutPaperSvg
+                                keyboardType='numeric'
+                                value={stateData.radius}
+                                style={
+                                    STYLES.fontSize18_themecolorred_Arial_400}
+                                onChangeText={(text) => {
+                                    setStateIsValidRadius(true)
+                                    setStateData({
+                                        ...stateData, radius: text
+                                    })
+                                }}
+
+                            />
+
+                        </View>
+
+
+
+
+
+                        <View style={{
+                            //backgroundColor: 'blue'
+                        }}>
+                            <Text style={STYLES.fontSize18_themecolorred_Arial_400}>KM</Text>
+                        </View>
+                    </View>
+                    {stateIsValidRadius == false ? <Text style={{
+                        color: 'red',
+                        marginLeft: '8%'
+                    }}>Enter Valid Radius</Text> : null}
+
+
+                    <View style={{
+                        //  marginTop: '20%',
+                        // backgroundColor: 'red',
+                        flex: 1,
+                        justifyContent: 'flex-end'
+                    }}>
+
+                        <Button1 text="Apply"
+                            onPress={() => { filterLocation() }} />
+                    </View>
+
+
+
+
+
+                </View>
+
+
+            </RBSheet>
 
 
             <RBSheet

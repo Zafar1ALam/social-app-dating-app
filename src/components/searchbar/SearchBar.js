@@ -20,6 +20,7 @@ const SearchBar = (props) => {
         }} onPress={props.onPress}>
             <>
                 <TextInput
+                    onChangeText={props.onChangeText}
                     autoFocus={props.autoFocus}
                     showSoftInputOnFocus={props.showSoftInputOnFocus}
                     selectionColor={COLORS.whiteFFFFFF}
@@ -31,8 +32,18 @@ const SearchBar = (props) => {
                         paddingLeft: '5%'
                     },
                     STYLES.fontSize18_whiteFFFFFF_OpenSans_Regular_400]} />
-                <SvgXml xml={Svgs.searchIcon}
-                    style={{ marginRight: '5%' }} />
+
+                <TouchableRipple style={{
+                    paddingHorizontal: '2%',
+                    paddingVertical: '5%',
+                    alignItems: 'center',
+                    //  backgroundColor: 'green'
+                }}
+                    onPress={props.onPress}>
+                    <SvgXml xml={Svgs.searchIcon}
+                        style={{ marginRight: '5%' }} />
+
+                </TouchableRipple>
             </>
         </TouchableRipple>
 

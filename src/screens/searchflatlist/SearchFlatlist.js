@@ -1,16 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, Text, View, FlatList, Image, ScrollView } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { TouchableRipple } from 'react-native-paper';
+import { ActivityIndicator, TouchableRipple } from 'react-native-paper';
 import { SvgXml } from 'react-native-svg';
 import SearchBar from '../../components/searchbar/SearchBar';
 import STYLES from '../../STYLES/STYLES';
+import BaseUrl, { ImageUrl } from '../../url/Urls';
+import { axiosGet } from '../../utills/axioshelper/axiosHelper';
 import COLORS from '../../utills/colors/Color';
 import Svgs from '../../utills/svgs/Svgs';
-
+import {
+    responsiveHeight,
+    responsiveWidth,
+    responsiveFontSize
+} from "react-native-responsive-dimensions";
 const SearchFlatlist = (props) => {
     const [searchQuery, setSearchQuery] = useState('')
-
+    const [stateActivityIndicatorBody, setStateActivityIndicatorBody] = useState(false)
     const [stateShowSoftInputOnFocus, setStateShowSoftInputOnFocus] = useState(false);
     useEffect(() => {
         setStateShowSoftInputOnFocus(true)
@@ -19,18 +25,59 @@ const SearchFlatlist = (props) => {
 
 
     const [listFlatlist, setFlatlist] = useState([
-        { id: 1 },
-        { id: 2 },
-        { id: 3 },
-        { id: 4 },
-        { id: 5 },
-        { id: 6 },
-        { id: 7 },
-        { id: 8 },
-        { id: 9 },
-        { id: 10 },
+        // { id: 1 },
+        // { id: 2 },
+        // { id: 3 },
+        // { id: 4 },
+        // { id: 5 },
+        // { id: 6 },
+        // { id: 7 },
+        // { id: 8 },
+        // { id: 9 },
+        // { id: 10 },
     ])
 
+    const searchApi = async () => {
+
+        if (searchQuery == '') {
+            //   console.log(stateData.email + 'emailaddress')
+            alert('search field is empty')
+
+
+
+        }
+
+
+
+
+        if (searchQuery != ''
+
+        ) {
+            setStateActivityIndicatorBody(true)
+
+            let b = 'name=' + searchQuery
+                + '&long=' + 73.069704 +
+                '&lat=' + 33.655127
+            try {
+                const response = await axiosGet(BaseUrl + 'users/getAll?' + b)
+                console.log(response.data.users)
+                if (response.data.success) {
+
+                    setFlatlist(response.data.users)
+                    setStateActivityIndicatorBody(false)
+                } else {
+
+                    setStateActivityIndicatorBody(false)
+                    alert(response.data.message)
+                }
+            }
+            catch (err) {
+
+                setStateActivityIndicatorBody(false)
+                alert(err)
+            }
+        }
+    }
     return (
 
         <SafeAreaView style={STYLES.withoutpaddingcontainer}>
@@ -71,6 +118,10 @@ const SearchFlatlist = (props) => {
                             setSearchQuery(text)
                         }}
 
+                            onPress={() => {
+                                searchApi()
+                            }}
+
                             autoFocus={true}
                             showSoftInputOnFocus={stateShowSoftInputOnFocus}
                         />
@@ -79,105 +130,118 @@ const SearchFlatlist = (props) => {
 
                 </View>
             </View>
+            {stateActivityIndicatorBody
+                ?
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <ActivityIndicator
+                        animating={stateActivityIndicatorBody} color={COLORS.themecolorred} />
+                </View>
+                :
+                <>
+                    <View style={{
+                        marginHorizontal: '7%',
 
-            <View style={{
-                marginHorizontal: '7%',
-
-            }}>
-                <FlatList style={{
-                    marginTop: '2%',
-                    width: '100%',
-                    //  alignSelf: 'center',
-
-
-                }}
-                    numColumns={2}
-                    showsVerticalScrollIndicator={false}
-
-                    data={listFlatlist}
-                    columnWrapperStyle={{
-                        justifyContent: 'space-between',
+                    }}>
+                        <FlatList style={{
+                            marginTop: '2%',
+                            width: '100%',
+                            //  alignSelf: 'center',
 
 
-                    }}
-                    renderItem={({ item }) => {
+                        }}
+                            numColumns={2}
+                            showsVerticalScrollIndicator={false}
 
-                        return (
-                            <TouchableRipple style={{
-                                height: 170,
-                                width: '45%',
-
-                                borderRadius: 19,
-                                marginBottom: '5%',
+                            data={listFlatlist}
+                            columnWrapperStyle={{
+                                justifyContent: 'space-between',
 
 
-                            }} onPress={() => {
-                                // props.navigation.push("TabNavigation1",
-                                //     { initialScreen: "Profile" })
-                            }}>
+                            }}
+                            renderItem={({ item }) => {
+                                console.log(ImageUrl + item?.pfp)
+                                return (
+                                    <TouchableRipple style={{
+                                        // height: 170,
+                                        // width: '45%',
+                                        height: responsiveWidth(47),
+                                        width: responsiveWidth(39),
 
-                                <>
-                                    <View style={{
-                                        width: '100%',
-                                        // alignSelf: 'center',
-                                        height: '100%',
+                                        borderRadius: 19,
+                                        marginBottom: '5%',
 
+
+                                    }} onPress={() => {
+                                        // props.navigation.push("TabNavigation1",
+                                        //     { initialScreen: "Profile" })
                                     }}>
-                                        <Image
-                                            source={require('../../assets/imagesearchflatlist.png')}
-                                            style={{
-                                                height: '100%',
-                                                width: '100%',
-                                                borderRadius: 19
 
-                                            }} />
-                                    </View>
-                                    <LinearGradient
-                                        colors={['rgba(255,255,255,0.05)', 'rgba(237,121,96,0.60)', '#ED7960']}
-                                        style={{
-                                            position: 'absolute',
-                                            bottom: '0%',
-                                            width: '100%',
-                                            left: '0%',
-                                            paddingHorizontal: '6%',
-                                            borderBottomLeftRadius: 18,
-                                            borderBottomRightRadius: 18,
-                                            paddingBottom: '7%'
-
-                                            //    backgroundColor: COLORS.creamED7960
-                                        }} >
-
-
-                                        <View style={{
-
-
-                                        }}>
-                                            <Text
-                                                style={STYLES.fontSize19_whiteFFFFFF_Nunito_ExtraBold_800}>
-                                                Emma, 22
-                                            </Text>
-
+                                        <>
                                             <View style={{
+                                                width: '100%',
+                                                // alignSelf: 'center',
+                                                height: '100%',
 
                                             }}>
+                                                {/* {require('../../assets/imagesearchflatlist.png')} */}
+                                                <Image
+                                                    source={{ uri: ImageUrl + item?.pfp }}
+                                                    style={{
+                                                        // height: '100%',
+                                                        // width: '100%',
+                                                        height: responsiveWidth(47),
+                                                        width: responsiveWidth(39),
+                                                        borderRadius: 19
 
-                                                <Text style={STYLES.fontSize9_whiteFFFFFF_Nunito_SemiBold_600}>
-                                                    72 km, Lawyer
-                                                </Text>
+                                                    }} />
                                             </View>
-                                        </View>
+                                            <LinearGradient
+                                                colors={['rgba(255,255,255,0.05)', 'rgba(237,121,96,0.60)', '#ED7960']}
+                                                style={{
+                                                    position: 'absolute',
+                                                    bottom: '0%',
+                                                    width: '100%',
+                                                    left: '0%',
+                                                    paddingHorizontal: '6%',
+                                                    borderBottomLeftRadius: 18,
+                                                    borderBottomRightRadius: 18,
+                                                    paddingBottom: '7%'
 
-                                    </LinearGradient >
+                                                    //    backgroundColor: COLORS.creamED7960
+                                                }} >
 
-                                </>
-                            </TouchableRipple>
-                        )
-                    }}
-                    keyExtractor={item => item.id}
-                />
 
-            </View>
+                                                <View style={{
 
+
+                                                }}>
+                                                    <Text
+                                                        style={STYLES.fontSize19_whiteFFFFFF_Nunito_ExtraBold_800}>
+                                                        {item?.firstName}, {item?.age}
+                                                    </Text>
+
+                                                    <View style={{
+
+                                                    }}>
+
+                                                        <Text style={STYLES.fontSize9_whiteFFFFFF_Nunito_SemiBold_600}>{
+                                                            item?.distance} km,   {item?.profession?.name}
+                                                        </Text>
+                                                    </View>
+                                                </View>
+
+                                            </LinearGradient >
+
+                                        </>
+                                    </TouchableRipple>
+                                )
+                            }}
+                            keyExtractor={item => item.id}
+                        />
+
+                    </View>
+                </>
+            }
 
             {/* </ScrollView> */}
 

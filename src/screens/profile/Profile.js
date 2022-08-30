@@ -69,6 +69,9 @@ const Profile = (props) => {
                                     })
                                 })
 
+                                setFlatlist(statePostsList.reverse())
+                                    ;
+
                                 setStateActivityIndicatorPost(false)
                             }
                             else {
@@ -248,10 +251,11 @@ const Profile = (props) => {
 
 
                             }}
+                                //inverted={true}
                                 numColumns={2}
                                 showsVerticalScrollIndicator={false}
 
-                                data={statePostsList}
+                                data={listFlatlist}
                                 columnWrapperStyle={{
                                     justifyContent: 'space-between',
 

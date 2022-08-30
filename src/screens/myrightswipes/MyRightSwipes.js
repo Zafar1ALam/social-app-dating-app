@@ -239,6 +239,7 @@ const MyRightSwipes = (props) => {
                                         <LinearGradient
                                             colors={['rgba(255,255,255,0.05)', 'rgba(237,121,96,0.60)', '#ED7960']}
                                             style={{
+
                                                 position: 'absolute',
                                                 bottom: '0%',
                                                 width: '100%',
@@ -258,7 +259,7 @@ const MyRightSwipes = (props) => {
                                             }}>
                                                 <Text
                                                     style={STYLES.fontSize19_whiteFFFFFF_Nunito_ExtraBold_800}>
-                                                    {item?.swiped?.firstName}, {item?.age}
+                                                    {item?.firstName}, {item?.age}
                                                 </Text>
 
                                                 <View style={{

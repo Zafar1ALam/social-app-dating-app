@@ -297,7 +297,7 @@ const FindMatch = (props) => {
 
                                 }}>
                                     <Text style={[STYLES.fontSize35_whiteFFFFFF_Nunito_ExtraBold_800,
-                                    { textAlign: 'center' }]}>{data.username}, {data.age}</Text>
+                                    { textAlign: 'center' }]}>{data.firstName}, {data.age}</Text>
 
                                 </View>
 
@@ -440,12 +440,14 @@ const FindMatch = (props) => {
 
             }
             else {
+                console.log('response.data.swipe')
+                console.log(response.data)
                 stateSwipesList.push(response.data.swipe)
                 const filteredData = cards.filter(item => item._id !== card._id);
                 //   console.log(filteredData)
                 setCards(filteredData);
                 alert(response.data.message)
-                alert(response.data.message)
+
             }
         }
 
@@ -648,7 +650,7 @@ const FindMatch = (props) => {
             }
             else {
                 setStateActivityIndicatorBody(true)
-                let b = "long=" + 73.026354 + "lat=" + 33.712876
+                let b = "long=" + 73.026354 + "&lat=" + 33.712876
                 console.log(b)
                 refRBSheetLocation.current.close()
                 try {
@@ -692,7 +694,7 @@ const FindMatch = (props) => {
             else {
 
                 setStateActivityIndicatorBody(true)
-                let b = "long=" + 73.026354 + "lat=" + 33.712876 + 'radius=' + stateData.radius
+                let b = "long=" + 73.026354 + "&lat=" + 33.712876 + 'radius=' + stateData.radius
                 console.log(b)
                 try {
                     const response = await axiosGet(BaseUrl + 'users/getAll?' + b)
